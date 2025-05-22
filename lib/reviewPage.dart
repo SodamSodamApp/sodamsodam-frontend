@@ -6,3 +6,19 @@
  *     - 사진 최대 3장 업로드
  *         - 텍스트 후기 작성 (텍스트 추천 가이드 제공)
  */
+
+import 'package:flutter/material.dart';
+
+class ReviewPage extends StatefulWidget {
+  const ReviewPage({super.key});
+
+  @override
+  State<ReviewPage> createState() => _ReviewPageState();
+}
+
+class _ReviewPageState extends State<ReviewPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(body: Container(child: Text("review")));
+  }
+}

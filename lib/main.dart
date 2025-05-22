@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 import 'package:sodamsodam_app/initialPage.dart';
 import 'package:sodamsodam_app/mainPage.dart';
+import 'package:sodamsodam_app/naviationBarPage.dart';
 
 /// 실행 파일
 
@@ -18,7 +18,7 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var size = MediaQuery.of(context).size;
+    Size size = MediaQuery.of(context).size;
     return MaterialApp(
       theme: ThemeData(
         primaryColor: Color(0xFFD9D9D9),
@@ -29,11 +29,11 @@ class MainApp extends StatelessWidget {
         body: Container(
           margin: EdgeInsets.all(30),
           alignment: Alignment.center,
-          width: double.infinity,
-          height: double.infinity,
+          width: size.width,
+          height: size.height,
           child: AspectRatio(
             aspectRatio: ratio,
-            child: Mainpage(),
+            child: NavigationBarPage(),
             //InitialPage(),
           ),
         ),

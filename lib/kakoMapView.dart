@@ -9,12 +9,8 @@ import 'dart:ui_web' as ui;
 import 'package:js/js_util.dart' as js_util;
 import 'package:web/web.dart' as dom;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:location/location.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:flutter/services.dart' show rootBundle;
 
 /*
 @JS('kakao.maps.Map')
@@ -108,7 +104,7 @@ class _KakaoMapWebViewState extends State<KakaoMapWebView>
   void initState() {
     super.initState();
 
-    // ➊ 뷰팩토리 등록
+    // 뷰팩토리 등록
     ui.platformViewRegistry.registerViewFactory(_htmlId, (int viewId) {
       final div =
           dom.HTMLDivElement()
@@ -118,14 +114,14 @@ class _KakaoMapWebViewState extends State<KakaoMapWebView>
             ..style.borderRadius = '${widget.borderRadius}px';
       return div;
     });
-    _initMap(); // ➋ 지도 초기화
+    _initMap();
   }
 
   Future<void> ensureKakaoLoaded() async {
     final g = js_util.globalThis;
     if (js_util.hasProperty(g, 'kakao') &&
         js_util.hasProperty(js_util.getProperty(g, 'kakao'), 'maps')) {
-      return; // 이미 준비 완료
+      return;
     }
     final c = Completer<void>();
     js_util.callMethod(
@@ -162,7 +158,7 @@ class _KakaoMapWebViewState extends State<KakaoMapWebView>
         return HtmlElementView(viewType: _htmlId);
       },
     );
-  } // ➌ Flutter 위젯으로 사용
+  }
 }
 
 /// 계층 경로를 따라가 JS Constructor 반환
