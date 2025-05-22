@@ -1,20 +1,44 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:sodamsodam_app/initialPage.dart';
-import 'package:sodamsodam_app/mainPage.dart';
-import 'package:sodamsodam_app/naviationBarPage.dart';
+import 'package:sodamsodam_app/screens/initialPage.dart';
+import 'package:sodamsodam_app/screens/mainPage.dart';
+import 'package:sodamsodam_app/SubScreens/naviationBarPage.dart';
+import 'package:sodamsodam_app/services/auth_services.dart';
+import 'package:sodamsodam_app/services/kakaoMapInteropService.dart';
 
 /// 실행 파일
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: 'assets/config/.env');
 
   runApp(MainApp());
 }
 
-class MainApp extends StatelessWidget {
+class MainApp extends StatefulWidget {
   const MainApp({super.key});
+
+  @override
+  State<MainApp> createState() => _MainAppState();
+}
+
+class _MainAppState extends State<MainApp> {
   static const double ratio = 375 / 812;
+  bool _loggedIn = AuthService.isLoggedIn();
+
+  void _onLogin() {
+    setState(() {
+      _loggedIn = true;
+    });
+  }
+
+  void _offLogin() {
+    setState(() {
+      _loggedIn = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +46,8 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       theme: ThemeData(
         primaryColor: Color(0xFFD9D9D9),
-        scaffoldBackgroundColor: Colors.black12,
+        scaffoldBackgroundColor: Colors.white,
+
         fontFamily: 'Pretendard',
       ),
       home: Scaffold(
@@ -33,8 +58,10 @@ class MainApp extends StatelessWidget {
           height: size.height,
           child: AspectRatio(
             aspectRatio: ratio,
-            child: NavigationBarPage(),
-            //InitialPage(),
+            child:
+                AuthService.isLoggedIn()
+                    ? NavigationBarPage(onLogin: _onLogin, offLogin: _offLogin)
+                    : InitialPage(onLogin: _onLogin, offLogin: _offLogin),
           ),
         ),
       ),
