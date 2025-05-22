@@ -1,0 +1,61 @@
+name: sodamsodam_app
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.7.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_inappwebview: ^6.1.5
+  flutter_svg: ^2.1.0
+  geolocator: ^14.0.0
+  js: ^0.7.2
+  location: ^8.0.0
+  vector_graphics: ^1.1.18
+  web: ^1.1.1
+  webview_flutter: ^4.12.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  fonts:
+    - family: Pretendard
+      fonts:
+        - asset: assets/fonts/Pretendard/Pretendard-Thin.woff
+          weight: 100
+        - asset: assets/fonts/Pretendard/Pretendard-ExtraLight.woff
+          weight: 200
+        - asset: assets/fonts/Pretendard/Pretendard-Light.woff
+          weight: 300
+        - asset: assets/fonts/Pretendard/Pretendard-Regular.woff
+          weight: 400
+        - asset: assets/fonts/Pretendard/Pretendard-Medium.woff
+          weight: 500
+        - asset: assets/fonts/Pretendard/Pretendard-SemiBold.woff
+          weight: 600
+        - asset: assets/fonts/Pretendard/Pretendard-Bold.woff
+          weight: 700
+        - asset: assets/fonts/Pretendard/Pretendard-ExtraBold.woff
+          weight: 800
+        - asset: assets/fonts/Pretendard/Pretendard-Black.woff
+          weight: 900
+   
+    - family: Gugi
+      fonts:
+        - asset: assets/fonts/Gugi/Gugi-Regular.ttf
+          weight: 400
+
+  
+  assets:
+    - assets/image/
+    - assets/kakao_login/ko/
+    - assets/kakao_login/en/
+    - assets/svg/
