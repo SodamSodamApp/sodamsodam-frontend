@@ -4,13 +4,9 @@
  * **추천 지도**: GPS 기반 내 위치 표시
  */
 
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:js/js_util.dart';
-import 'package:sodamsodam_app/subscreens/kakao_map_small_view%20.dart';
 import 'package:sodamsodam_app/subscreens/kakao_map_view.dart';
 import 'package:sodamsodam_app/subscreens/placeSuggestionCard.dart';
 import 'package:sodamsodam_app/services/kakaoRestApiService.dart';
@@ -29,7 +25,8 @@ class _MainpageState extends State<Mainpage> {
   final _formKey1 = GlobalKey<FormState>();
   final _formKey2 = GlobalKey<FormState>();
 
-  KakaoMapController? _controller;
+  // KakaoMapController? _controller;
+
   List<KakaoPlace> places = List.empty(growable: true);
 
   late var _textVal;
@@ -161,9 +158,9 @@ class _MainpageState extends State<Mainpage> {
                     borderRadius: BorderRadius.circular(35),
                   ),
                   child: KakaoMapView(
+                    tag: 'main', // 고유 태그 지정
                     draggable: false,
                     zoomable: false,
-                    tag: 'main',
                     borderRadius: 35,
                   ),
                 ),
@@ -230,12 +227,20 @@ class _MainpageState extends State<Mainpage> {
     final bool focused = _node.hasFocus;
     return Stack(
       children: [
-        KakaoMapView(
-          draggable: true,
-          zoomable: true,
-          tag: 'map',
-          borderRadius: 0,
-          onMapReady: (ctrl) => setState(() => _controller = ctrl),
+        Column(
+          children: [
+            Expanded(
+              child: KakaoMapView(
+                tag: 'map1', // 고유 태그 지정
+                draggable: true,
+                zoomable: true,
+                borderRadius: 16,
+                //onMapReady: (controller) {
+                // setState(() => _controller = controller);
+                //},
+              ),
+            ),
+          ],
         ),
 
         Positioned(
@@ -342,7 +347,8 @@ class _MainpageState extends State<Mainpage> {
 
     for (KakaoPlace e in places) {
       print(e.name);
-      _controller?.addMarker(e.lat, e.lng, e.toJson());
+
+      ///_controller?.addMarker(e.lat, e.lng, e.toJson());
     }
   }
 }

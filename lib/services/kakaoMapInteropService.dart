@@ -6,10 +6,10 @@ library kakao;
 import 'dart:async';
 import 'dart:js_interop';
 import 'dart:ui';
-import 'package:http/http.dart' as dotenv;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart';
 import 'package:js/js_util.dart' as js_util;
 import 'package:web/web.dart';
-import 'package:web/web.dart' as web;
 
 /*
 @JS('kakao.maps.Map')
@@ -53,12 +53,7 @@ extension KakaoMapExt on KakaoMap {
 }
 
 @JS('kakao.maps.load')
-void kakaoMapsLoad(String apiKey) {
-  final script = document.createElement('script') as HTMLScriptElement;
-  script.src =
-      'https://dapi.kakao.com/v2/maps/sdk.js?appkey=$apiKey&autoload=false';
-  document.head?.appendChild(script);
-}
+external void kakaoMapsLoad(JSFunction callback);
 
 // kakao.maps.LatLng
 @JS('kakao.maps.LatLng')
@@ -67,7 +62,7 @@ class LatLng {}
 
 /// LatLng 생성 헬퍼
 LatLng createLatLng(num lat, num lng) {
-  final latLngCtor = KakoMapInterop.jsConstructor(['kakao', 'maps', 'LatLng']);
+  final latLngCtor = _jsConstructor(['kakao', 'maps', 'LatLng']);
   return js_util.callConstructor(latLngCtor, [lat, lng]) as LatLng;
 }
 
@@ -78,6 +73,18 @@ JSObject createMapOptions({required LatLng center, int level = 5}) {
   js_util.setProperty(opts, 'level', level);
   return opts;
 }
+
+/// 계층 경로를 따라가 JS Constructor 반환
+Object _jsConstructor(List<String> path) {
+  Object current = js_util.globalThis;
+  for (final segment in path) {
+    current = js_util.getProperty<Object?>(current, segment)!;
+  }
+  return current;
+}
+
+/// js_util.newObject() 의 정확한 반환 타입
+typedef JSObject = Object;
 
 @JS('kakao.maps.Marker')
 @staticInterop
@@ -139,6 +146,3 @@ class KakoMapInterop {
     js_util.callMethod(mapsObj, 'load', [js_util.allowInterop(cb)]);
   }
 }
-
-/// js_util.newObject() 의 정확한 반환 타입
-typedef JSObject = Object;
