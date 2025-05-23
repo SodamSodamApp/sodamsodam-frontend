@@ -2,15 +2,15 @@ import 'dart:async';
 import 'dart:ui_web' as ui;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:js/js_util.dart' as js_util;
-import 'package:sodamsodam_app/services/kakaoMapInteropService.dart';
+import 'package:sodamsodam_app/services/kakaoSmallMapInteropService.dart';
 import 'package:web/web.dart' as dom;
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
-class KakaoMapController {
-  KakaoMapController._(this._state);
-  final _KakaoMapWebViewState _state;
+class KakaoSmallMapController {
+  KakaoSmallMapController._(this._state);
+  final _KakaoSmallMapViewState _state;
 
   void addMarker(double lat, double lng, Map<String, dynamic> info) =>
       _state._addMarker(createLatLng(lat, lng), info); // 내부 실제 로직 호출
@@ -24,8 +24,8 @@ class MarkerWithInfo {
   MarkerWithInfo(this.marker, this.info);
 }
 
-class KakaoMapWebView extends StatefulWidget {
-  const KakaoMapWebView({
+class KakaoSmallMapView extends StatefulWidget {
+  const KakaoSmallMapView({
     super.key,
     required this.draggable,
     required this.zoomable,
@@ -39,22 +39,21 @@ class KakaoMapWebView extends StatefulWidget {
 
   final String tag;
 
-  final void Function(KakaoMapController controller)? onMapReady;
+  final void Function(KakaoSmallMapController controller)? onMapReady;
 
   @override
-  State<KakaoMapWebView> createState() => _KakaoMapWebViewState();
+  State<KakaoSmallMapView> createState() => _KakaoSmallMapViewState();
 }
 
-class _KakaoMapWebViewState extends State<KakaoMapWebView>
-    with AutomaticKeepAliveClientMixin<KakaoMapWebView> {
+class _KakaoSmallMapViewState extends State<KakaoSmallMapView>
+    with AutomaticKeepAliveClientMixin<KakaoSmallMapView> {
   final _htmlId = 'kakao-map-${DateTime.now().millisecondsSinceEpoch}';
 
-  KakaoMap? _map;
+  late KakaoMap _map;
   final List<Marker> _markers = <Marker>[];
 
   void _addMarker(LatLng pos, Map<String, dynamic> info) {
     final map = _map;
-    if (map == null) return;
     final m = createMarker(pos, map);
 
     js_util.callMethod(m, 'setMap', [map]);
@@ -66,16 +65,26 @@ class _KakaoMapWebViewState extends State<KakaoMapWebView>
       [
         m,
         'click',
-        js_util.allowInterop(() {
-          _onMarkerClicked(info);
+        js_util.allowInterop((event) {
+          _onMarkerClicked(m, info);
         }),
       ],
     );
   }
 
-  void _onMarkerClicked(Map<String, dynamic> info) {
-    // 예: 인포윈도우 표시
-    final content = '<div style="padding:5px;">${info['name']}</div>';
+  void _onMarkerClicked(Marker clickedMarker, Map<String, dynamic> info) {
+    final content = '''
+    <div style="
+      padding: 10px;
+      background: white;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    ">
+      <strong>${info['place_name']}</strong><br>
+      id:${info['id']}<br>x:${info['x']}<br>y:${info['y']}
+    </div>
+  ''';
+
     final infowindowCtor = KakoMapInterop.jsConstructor([
       'kakao',
       'maps',
@@ -83,10 +92,9 @@ class _KakaoMapWebViewState extends State<KakaoMapWebView>
     ]);
     final opts = js_util.jsify({'content': content});
     final infowindow = js_util.callConstructor(infowindowCtor, [opts]);
-    js_util.callMethod(infowindow, 'open', [
-      _map,
-      _markers,
-    ]); // marker는 클릭된 마커 객체
+
+    // 클릭된 마커에 인포윈도우 연결
+    js_util.callMethod(infowindow, 'open', [_map, clickedMarker]);
   }
 
   void _clearMarkers() {
@@ -121,10 +129,27 @@ class _KakaoMapWebViewState extends State<KakaoMapWebView>
       apiKey: dotenv.get("KAKAO_JAVASCRIPTKEY"),
       onReady: _initMap,
     );
+    //_initMap();
+  }
+
+  Future<void> ensureKakaoLoaded() async {
+    final g = js_util.globalThis;
+    if (js_util.hasProperty(g, 'kakao') &&
+        js_util.hasProperty(js_util.getProperty(g, 'kakao'), 'maps')) {
+      return;
+    }
+    final c = Completer<void>();
+    js_util.callMethod(
+      js_util.getProperty(js_util.getProperty(g, 'kakao'), 'maps'),
+      'load',
+      [js_util.allowInterop(() => c.complete())],
+    );
+    await c.future;
+    _initMap();
   }
 
   Future<void> _initMap() async {
-    //await ensureKakaoLoaded();
+    // await ensureKakaoLoaded();
 
     final pos = await Geolocator.getCurrentPosition();
     final container = dom.document.getElementById(_htmlId)!;
@@ -140,15 +165,16 @@ class _KakaoMapWebViewState extends State<KakaoMapWebView>
       ..setZoomable(widget.zoomable)
       ..setCenter(center);
 
-    widget.onMapReady?.call(KakaoMapController._(this));
+    widget.onMapReady?.call(KakaoSmallMapController._(this));
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
+
     return FutureBuilder(
-      future: _initMap(),
-      builder: (_, __) {
+      future: ensureKakaoLoaded(), //_initMap(),
+      builder: (BuildContext context, AsyncSnapshot snapshot) {
         return HtmlElementView(viewType: _htmlId);
       },
     );

@@ -5,7 +5,7 @@
 
 import 'package:flutter/material.dart';
 //import 'package:flutter_svg/flutter_svg.dart';
-import 'package:sodamsodam_app/SubScreens/naviationBarPage.dart';
+import 'package:sodamsodam_app/subscreens/naviationBarPage.dart';
 import 'package:sodamsodam_app/main.dart';
 import 'package:sodamsodam_app/services/auth_services.dart';
 import 'package:sodamsodam_app/services/kakaoRestApiService.dart';

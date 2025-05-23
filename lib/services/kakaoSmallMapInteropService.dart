@@ -3,13 +3,10 @@
 @JS() // JS interop용
 library kakao;
 
-import 'dart:async';
 import 'dart:js_interop';
 import 'dart:ui';
-import 'package:http/http.dart' as dotenv;
 import 'package:js/js_util.dart' as js_util;
 import 'package:web/web.dart';
-import 'package:web/web.dart' as web;
 
 /*
 @JS('kakao.maps.Map')

@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:sodamsodam_app/screens/initialPage.dart';
 import 'package:sodamsodam_app/screens/mainPage.dart';
-import 'package:sodamsodam_app/SubScreens/naviationBarPage.dart';
+import 'package:sodamsodam_app/subscreens/naviationBarPage.dart';
 import 'package:sodamsodam_app/services/auth_services.dart';
 import 'package:sodamsodam_app/services/kakaoMapInteropService.dart';
 

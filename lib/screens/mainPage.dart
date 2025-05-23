@@ -10,8 +10,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:js/js_util.dart';
-import 'package:sodamsodam_app/SubScreens/kakoMapView.dart';
-import 'package:sodamsodam_app/SubScreens/placeSuggestionCard.dart';
+import 'package:sodamsodam_app/subscreens/kakao_map_small_view%20.dart';
+import 'package:sodamsodam_app/subscreens/kakao_map_view.dart';
+import 'package:sodamsodam_app/subscreens/placeSuggestionCard.dart';
 import 'package:sodamsodam_app/services/kakaoRestApiService.dart';
 
 //const String kakaoMapKey = '95f0a77720a3ac4f74b5ae89927a5a9a'; // .env 전환 해야 함
@@ -35,7 +36,7 @@ class _MainpageState extends State<Mainpage> {
 
   final FocusNode _node = FocusNode();
 
-  int _currentIndex = 0;
+  int _currentIndex = 1;
 
   @override
   void initState() {
@@ -159,12 +160,11 @@ class _MainpageState extends State<Mainpage> {
                     color: Color(0xFFD9D9D9),
                     borderRadius: BorderRadius.circular(35),
                   ),
-                  child: KakaoMapWebView(
-                    // 이 부분은 정적 이미지 지도로 바꾸는 게 더 좋을 것 같다 https://apis.map.kakao.com/web/sample/staticMap/
+                  child: KakaoMapView(
                     draggable: false,
                     zoomable: false,
+                    tag: 'main',
                     borderRadius: 35,
-                    tag: 'mainView',
                   ),
                 ),
 
@@ -230,11 +230,11 @@ class _MainpageState extends State<Mainpage> {
     final bool focused = _node.hasFocus;
     return Stack(
       children: [
-        KakaoMapWebView(
+        KakaoMapView(
           draggable: true,
           zoomable: true,
+          tag: 'map',
           borderRadius: 0,
-          tag: 'mapView',
           onMapReady: (ctrl) => setState(() => _controller = ctrl),
         ),
 
@@ -315,10 +315,6 @@ class _MainpageState extends State<Mainpage> {
                   cursorColor: Colors.black,
                   cursorHeight: 18,
 
-                  onChanged:
-                      (value) => setState(() {
-                        _textVal = value;
-                      }),
                   textInputAction:
                       TextInputAction.search, // ↵ 키에 “Search” 아이콘 표시
                   onFieldSubmitted: getSearchResult,
@@ -345,6 +341,7 @@ class _MainpageState extends State<Mainpage> {
     });
 
     for (KakaoPlace e in places) {
+      print(e.name);
       _controller?.addMarker(e.lat, e.lng, e.toJson());
     }
   }
