@@ -109,14 +109,13 @@ class KakoMapInterop {
     return current;
   }
 
-  static void loadKakaoSdk({
+  static Future<void> loadKakaoSdk({
     required String apiKey,
     required VoidCallback onReady,
-  }) {
+  }) async {
     // 이미 삽입되어 있으면 바로 콜백 등록
     if (document.getElementById('kakao-sdk') != null) {
       afterSdkLoaded(onReady);
-      return;
     }
 
     // 1) autoload=false 로 SDK 삽입
@@ -144,5 +143,50 @@ class KakoMapInterop {
     }
     final mapsObj = js_util.getProperty(kakaoObj, 'maps');
     js_util.callMethod(mapsObj, 'load', [js_util.allowInterop(cb)]);
+  }
+}
+
+class KakaoSDKInitializer {
+  static const _maxRetries = 5;
+  static const _initialDelay = Duration(seconds: 1);
+  static const _backoffFactor = 2;
+
+  static Future<void> initializeWithRetry({
+    required String apiKey,
+    int retryCount = 0,
+    Duration? delay,
+  }) async {
+    try {
+      await KakoMapInterop.loadKakaoSdk(
+        apiKey: apiKey,
+        onReady: () => print('Kakao SDK 초기화 성공'),
+      );
+
+      // 실제 로드 여부 검증
+      if (!_isSDKLoaded()) {
+        throw Exception('SDK 객체 존재하지 않음');
+      }
+    } catch (e, stack) {
+      print('초기화 실패 (시도 $retryCount): $e\n$stack');
+
+      if (retryCount >= _maxRetries) {
+        throw TimeoutException('최대 재시도 횟수 초과', _maxRetries as Duration?);
+      }
+
+      final nextDelay = delay ?? _initialDelay;
+      await Future.delayed(nextDelay);
+
+      return initializeWithRetry(
+        apiKey: apiKey,
+        retryCount: retryCount + 1,
+        delay: nextDelay * _backoffFactor,
+      );
+    }
+  }
+
+  static bool _isSDKLoaded() {
+    final g = js_util.globalThis;
+    return js_util.hasProperty(g, 'kakao') &&
+        js_util.hasProperty(js_util.getProperty(g, 'kakao'), 'maps');
   }
 }

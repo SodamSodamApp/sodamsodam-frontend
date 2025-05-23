@@ -25,7 +25,7 @@ class _MainpageState extends State<Mainpage> {
   final _formKey1 = GlobalKey<FormState>();
   final _formKey2 = GlobalKey<FormState>();
 
-  // KakaoMapController? _controller;
+  KakaoMapController? _controller;
 
   List<KakaoPlace> places = List.empty(growable: true);
 
@@ -33,7 +33,7 @@ class _MainpageState extends State<Mainpage> {
 
   final FocusNode _node = FocusNode();
 
-  int _currentIndex = 1;
+  int _currentIndex = 0;
 
   @override
   void initState() {
@@ -162,6 +162,11 @@ class _MainpageState extends State<Mainpage> {
                     draggable: false,
                     zoomable: false,
                     borderRadius: 35,
+                    onMapReady: (controller) {
+                      setState(() {
+                        _currentIndex = 1;
+                      });
+                    },
                   ),
                 ),
 
@@ -235,9 +240,12 @@ class _MainpageState extends State<Mainpage> {
                 draggable: true,
                 zoomable: true,
                 borderRadius: 16,
-                //onMapReady: (controller) {
-                // setState(() => _controller = controller);
-                //},
+                onMapReady: (controller) {
+                  setState(() => _controller = controller);
+                  setState(() {
+                    _currentIndex = 0;
+                  });
+                },
               ),
             ),
           ],
@@ -348,7 +356,7 @@ class _MainpageState extends State<Mainpage> {
     for (KakaoPlace e in places) {
       print(e.name);
 
-      ///_controller?.addMarker(e.lat, e.lng, e.toJson());
+      _controller?.addMarker(e.lat, e.lng, e.toJson());
     }
   }
 }
