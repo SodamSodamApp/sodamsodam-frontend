@@ -1,149 +1,140 @@
-// lib/kakao_map_web.dart
-
-@JS() // JS interop용
-library kakao;
-
 import 'dart:async';
 import 'dart:js_interop';
-import 'dart:ui';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http/http.dart';
-import 'package:js/js_util.dart' as js_util;
+import 'dart:js_interop_unsafe' as u;
+import 'package:flutter/material.dart';
 import 'package:web/web.dart';
 
-/*
-@JS('kakao.maps.Map')
-@staticInterop
-class KakaoMap {} // 빈 껍데기
-
-extension KakaoMapJS on KakaoMap {
-  // JS 생성자 래핑 – 이름은 자유
-  external static KakaoMap create(dom.Element container, MapOptions opts);
-
-  external void setCenter(LatLng latLng);
-}
-
-@JS('kakao.maps.LatLng')
-@staticInterop
-class LatLng {}
-
-extension LatLngJS on LatLng {
-  external static LatLng create(num lat, num lng);
-}
-
-@JS()
-@staticInterop
-class MapOptions {}
-
-extension MapOptionsJS on MapOptions {
-  external static MapOptions create({LatLng center, int level});
-}
-*/
+@JS('kakao')
+external JSObject get kakao;
 
 @JS('kakao.maps.Map')
-@staticInterop
-class KakaoMap {}
+extension type KakaoMap._(JSObject _) implements JSObject {
+  external factory KakaoMap(HTMLElement container, MapOptions options);
 
-extension KakaoMapExt on KakaoMap {
-  external void setCenter(LatLng pos);
+  @JS('setCenter')
+  external void _setCenter(JSObject latLng);
 
-  external void setDraggable(bool bool);
-
-  external void setZoomable(bool bool);
+  void setCenter(LatLng latLng) => _setCenter(latLng.toJS());
+  external void setDraggable(bool enabled);
+  external void setZoomable(bool enabled);
 }
-
-@JS('kakao.maps.load')
-external void kakaoMapsLoad(JSFunction callback);
-
-// kakao.maps.LatLng
-@JS('kakao.maps.LatLng')
-@staticInterop
-class LatLng {}
-
-/// LatLng 생성 헬퍼
-LatLng createLatLng(num lat, num lng) {
-  final latLngCtor = _jsConstructor(['kakao', 'maps', 'LatLng']);
-  return js_util.callConstructor(latLngCtor, [lat, lng]) as LatLng;
-}
-
-/// MapOptions 객체 리터럴 생성
-JSObject createMapOptions({required LatLng center, int level = 5}) {
-  final opts = js_util.newObject();
-  js_util.setProperty(opts, 'center', center);
-  js_util.setProperty(opts, 'level', level);
-  return opts;
-}
-
-/// 계층 경로를 따라가 JS Constructor 반환
-Object _jsConstructor(List<String> path) {
-  Object current = js_util.globalThis;
-  for (final segment in path) {
-    current = js_util.getProperty<Object?>(current, segment)!;
-  }
-  return current;
-}
-
-/// js_util.newObject() 의 정확한 반환 타입
-typedef JSObject = Object;
 
 @JS('kakao.maps.Marker')
-@staticInterop
-class Marker {}
-
-Marker createMarker(LatLng position, KakaoMap map) {
-  final opts = js_util.newObject();
-  js_util.setProperty(opts, 'position', position);
-  js_util.setProperty(opts, 'map', map);
-
-  final ctor = KakoMapInterop.jsConstructor(['kakao', 'maps', 'Marker']);
-  return js_util.callConstructor(ctor, [opts]) as Marker;
+extension type Marker._(JSObject _) implements JSObject {
+  external factory Marker(MarkerOptions options);
+  external void setMap(KakaoMap? map);
 }
 
-/// 계층 경로를 따라가 JS Constructor 반환
-class KakoMapInterop {
-  static Object jsConstructor(List<String> path) {
-    Object current = js_util.globalThis;
-    for (final segment in path) {
-      current = js_util.getProperty<Object?>(current, segment)!;
-    }
-    return current;
+@JS('kakao.maps.LatLng')
+extension type LatLng._(JSObject _) implements JSObject {
+  external factory LatLng(double lat, double lng);
+  external double get lat;
+  external double get lng;
+
+  JSObject toJS() => this;
+}
+
+extension type InfoWindow(JSObject _) implements JSObject {
+  external void open(JSObject map, JSObject marker);
+}
+
+extension type Event._(JSObject _) implements JSObject {
+  external void addListener(JSObject target, String type, JSFunction listener);
+}
+
+extension type MapOptions._(JSObject _) implements JSObject {
+  external factory MapOptions({JSObject? center, int? level});
+}
+
+extension type MarkerOptions._(JSObject _) implements JSObject {
+  external factory MarkerOptions({JSObject? position, JSObject? map});
+}
+
+extension type InfoWindowOptions._(JSObject _) implements JSObject {
+  external factory InfoWindowOptions({String? content});
+}
+
+extension KakaoMapsExt on JSObject {
+  external JSObject get maps;
+}
+
+extension MapsNamespace on JSObject {
+  external JSFunction get Map;
+  external JSFunction get LatLng;
+  external JSFunction get Marker;
+  external JSFunction get InfoWindow;
+  external JSObject get event;
+  external JSFunction get load;
+}
+
+// 이벤트 등록
+extension EventExt on JSObject {
+  external void addListener(JSObject target, String type, JSFunction listener);
+}
+
+// 팩토리 함수
+LatLng createLatLng(double lat, double lng) {
+  return LatLng(lat, lng);
+}
+
+MapOptions createMapOptions({required JSObject center, int level = 5}) =>
+    MapOptions(center: center, level: level);
+
+Marker createMarker(JSObject position, JSObject map) {
+  final options = JSObject();
+  options.setProperty('position'.toJS, position);
+  options.setProperty('map'.toJS, map);
+  return kakao.maps.Marker.callAsConstructor(options);
+}
+
+InfoWindow createInfoWindow(String content) {
+  final options = JSObject();
+  options.setProperty('content'.toJS, content.toJS);
+  return kakao.maps.InfoWindow.callAsConstructor(options);
+}
+
+/// SDK가 완전히 준비될 때까지 대기
+Future<void> ensureKakaoLoaded() async {
+  while (true) {
+    final hasKakao = window.hasProperty('kakao'.toJS).toDartBool;
+    if (hasKakao) break;
+    await Future.delayed(const Duration(milliseconds: 100));
+  }
+  final completer = Completer<void>();
+  final callback = (() => completer.complete()).toJS;
+  kakao.maps.load.callAsFunction(callback);
+  await completer.future;
+}
+
+extension JSAnyExtensions on JSAny? {
+  bool get toDartBool {
+    final value = dartify();
+    return value is bool ? value : false;
+  }
+}
+
+Future<void> loadKakaoSdk(String apiKey) async {
+  final completer = Completer<void>();
+
+  // SDK 로드 완료 콜백
+  void onLoaded() {
+    if (!completer.isCompleted) completer.complete();
   }
 
-  static Future<void> loadKakaoSdk({
-    required String apiKey,
-    required VoidCallback onReady,
-  }) async {
-    // 이미 삽입되어 있으면 바로 콜백 등록
-    if (document.getElementById('kakao-sdk') != null) {
-      afterSdkLoaded(onReady);
-    }
-
-    // 1) autoload=false 로 SDK 삽입
-    final script =
-        HTMLScriptElement()
-          ..id = 'kakao-sdk'
-          ..defer = true
-          ..src =
-              'https://dapi.kakao.com/v2/maps/sdk.js?appkey=$apiKey&autoload=false';
-    document.head!.append(script);
-
-    // 2) onLoad 이벤트 → kakao.maps.load(cb)
-    script.onLoad.listen((_) => afterSdkLoaded(onReady));
+  if (document.getElementById('kakao-sdk') != null) {
+    onLoaded();
+    return;
   }
 
-  static void afterSdkLoaded(VoidCallback cb) {
-    final kakaoObj = js_util.getProperty(js_util.globalThis, 'kakao');
-    if (kakaoObj == null) {
-      // 로딩 지연 대비
-      Future.delayed(
-        const Duration(milliseconds: 100),
-        () => afterSdkLoaded(cb),
-      );
-      return;
-    }
-    final mapsObj = js_util.getProperty(kakaoObj, 'maps');
-    js_util.callMethod(mapsObj, 'load', [js_util.allowInterop(cb)]);
-  }
+  final script =
+      HTMLScriptElement()
+        ..id = 'kakao-sdk'
+        ..defer = true
+        ..src =
+            'https://dapi.kakao.com/v2/maps/sdk.js?appkey=$apiKey&autoload=false';
+  document.head!.append(script);
+
+  await script.onLoad.first;
 }
 
 class KakaoSDKInitializer {
@@ -157,17 +148,14 @@ class KakaoSDKInitializer {
     Duration? delay,
   }) async {
     try {
-      await KakoMapInterop.loadKakaoSdk(
-        apiKey: apiKey,
-        onReady: () => print('Kakao SDK 초기화 성공'),
-      );
+      await loadKakaoSdk(apiKey);
 
       // 실제 로드 여부 검증
       if (!_isSDKLoaded()) {
         throw Exception('SDK 객체 존재하지 않음');
       }
     } catch (e, stack) {
-      print('초기화 실패 (시도 $retryCount): $e\n$stack');
+      debugPrint('초기화 실패 (시도 $retryCount): $e\n$stack');
 
       if (retryCount >= _maxRetries) {
         throw TimeoutException('최대 재시도 횟수 초과', _maxRetries as Duration?);
@@ -185,8 +173,10 @@ class KakaoSDKInitializer {
   }
 
   static bool _isSDKLoaded() {
-    final g = js_util.globalThis;
-    return js_util.hasProperty(g, 'kakao') &&
-        js_util.hasProperty(js_util.getProperty(g, 'kakao'), 'maps');
+    final hasKakao = window.has('kakao');
+    if (!hasKakao) return false;
+
+    final kakaoObj = window.getProperty('kakao'.toJS) as JSObject;
+    return kakaoObj.has('maps');
   }
 }
