@@ -12,29 +12,77 @@ import 'package:sodamsodam_app/subscreens/kakao_map_view.dart';
 import 'package:sodamsodam_app/subscreens/place_suggestion_card.dart';
 import 'package:sodamsodam_app/services/rest_api_service.dart';
 
-//const String kakaoMapKey = '95f0a77720a3ac4f74b5ae89927a5a9a'; // .env 전환 해야 함
+class MainPageController {
+  MainPageController._(this._state);
+  final _MainpageState _state;
+
+  //int getCurrentIndex() => _state._currentIndex;
+
+  void setCurrentIndex(int index) => _state._setCurrentIndex(index);
+}
 
 class Mainpage extends StatefulWidget {
-  final double height;
-  const Mainpage({super.key, this.height = 450});
+  const Mainpage({super.key});
 
   @override
   State<Mainpage> createState() => _MainpageState();
 }
 
 class _MainpageState extends State<Mainpage> {
-  final _formKey1 = GlobalKey<FormState>();
-  final _formKey2 = GlobalKey<FormState>();
+  late final MainPageController _pageController;
+  int _currentIndex = 0;
 
-  KakaoMapController? _controller;
+  @override
+  void initState() {
+    super.initState();
+    _pageController = MainPageController._(this);
+  }
+
+  void _setCurrentIndex(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Size size = MediaQuery.of(context).size;
+
+    return Scaffold(
+      body: Container(
+        color: Colors.white,
+        width: size.width,
+        height: size.height,
+        child: IndexedStack(
+          index: _currentIndex,
+          children: [
+            FirstMainPage(pageController: _pageController),
+            SecondMainPage(pageController: _pageController),
+          ],
+        ),
+
+        //Map ? mainView() : mapView(),
+      ),
+    );
+  }
+}
+
+class FirstMainPage extends StatefulWidget {
+  final MainPageController pageController;
+  const FirstMainPage({super.key, required this.pageController});
+
+  @override
+  State<FirstMainPage> createState() => _FirstMainPageState();
+}
+
+class _FirstMainPageState extends State<FirstMainPage> {
+  final _formKey1 = GlobalKey<FormState>();
 
   List<KakaoPlace> places = List.empty(growable: true);
 
-  late var _textVal;
-
   final FocusNode _node = FocusNode();
 
-  int _currentIndex = 0;
+  late String _textVal;
 
   @override
   void initState() {
@@ -52,24 +100,6 @@ class _MainpageState extends State<Mainpage> {
 
   @override
   Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
-
-    return Scaffold(
-      body: Container(
-        color: Colors.white,
-        width: size.width,
-        height: size.height,
-        child: IndexedStack(
-          index: _currentIndex,
-          children: [mainView(), mapView()],
-        ),
-
-        //Map ? mainView() : mapView(),
-      ),
-    );
-  }
-
-  Widget mainView() {
     final bool focused = _node.hasFocus;
     return SizedBox.expand(
       child: Column(
@@ -122,7 +152,7 @@ class _MainpageState extends State<Mainpage> {
                       }),
 
                   onSaved: (newValue) {
-                    _textVal = newValue;
+                    _textVal = newValue!;
                     //검색 이벤트 발생
                   },
                 ),
@@ -184,11 +214,7 @@ class _MainpageState extends State<Mainpage> {
                   ),
                   onTap: () {
                     print('Move to Map');
-
-                    setState(() {
-                      _currentIndex = 1;
-                      //isMap = !isMap;
-                    });
+                    widget.pageController.setCurrentIndex(1);
                   },
                 ),
               ],
@@ -224,8 +250,30 @@ class _MainpageState extends State<Mainpage> {
       ),
     );
   }
+}
 
-  Widget mapView() {
+class SecondMainPage extends StatefulWidget {
+  final MainPageController pageController;
+  const SecondMainPage({super.key, required this.pageController});
+
+  @override
+  State<SecondMainPage> createState() => _SecondMainPageState();
+}
+
+class _SecondMainPageState extends State<SecondMainPage> {
+  final _formKey2 = GlobalKey<FormState>();
+  KakaoMapController? _controller;
+
+  List<KakaoPlace> places = List.empty(growable: true);
+  bool _isMarkerSelected = false;
+  Map<String, dynamic>? _selectedinfo;
+
+  final FocusNode _node = FocusNode();
+
+  late String _textVal;
+
+  @override
+  Widget build(BuildContext context) {
     final bool focused = _node.hasFocus;
     return Stack(
       children: [
@@ -237,6 +285,12 @@ class _MainpageState extends State<Mainpage> {
                 draggable: true,
                 zoomable: true,
                 borderRadius: 0,
+                onChanged: (info) {
+                  setState(() {
+                    _selectedinfo = info;
+                    _isMarkerSelected = !_isMarkerSelected;
+                  });
+                },
                 onMapReady: (controller) {
                   setState(() => _controller = controller);
                 },
@@ -261,10 +315,7 @@ class _MainpageState extends State<Mainpage> {
                 onTap: () {
                   print('Move to Main');
 
-                  setState(() {
-                    _currentIndex = 0;
-                    //isMap = !isMap;
-                  });
+                  widget.pageController.setCurrentIndex(0);
                 },
                 child: Container(
                   margin: EdgeInsets.all(size * 0.5),
@@ -330,6 +381,15 @@ class _MainpageState extends State<Mainpage> {
             ),
           ),
         ),
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: Material(
+            elevation: 12,
+            child: PlaceInfo(_selectedinfo, _isMarkerSelected),
+          ),
+        ),
       ],
     );
   }
@@ -353,5 +413,88 @@ class _MainpageState extends State<Mainpage> {
 
       _controller?.addMarker(e.lat, e.lng, e.toJson());
     }
+  }
+}
+
+class PlaceInfo extends StatefulWidget {
+  final Map<String, dynamic>? info;
+  final bool isSelected;
+  const PlaceInfo(this.info, this.isSelected, {super.key});
+
+  @override
+  State<PlaceInfo> createState() => _PlaceInfoState();
+}
+
+class _PlaceInfoState extends State<PlaceInfo> {
+  @override
+  Widget build(BuildContext context) {
+    return Visibility(
+      visible: widget.isSelected,
+      child: Container(
+        height: 227,
+        width: 375,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(30),
+            topRight: Radius.circular(30),
+          ),
+        ),
+        child: Column(
+          children: [
+            Container(
+              //이미지 자리 -> 카카오 지도에서 못들고 온다네요...?
+              height: 129,
+              width: 375,
+              //color: Color(0xFFE6E5E2),
+            ),
+            Container(
+              color: Colors.white,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.info?['place_name'],
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
+                  ),
+
+                  Text(
+                    "장소 설명 적는 곳입니다. Kakao 장소 겁새으로는 얻을 수 없을 거 같고 앱에 설명을 등록하고 불러와야하지않나...띄우면 업종 정도 바로 띄울 수 있습니다.",
+                    style: TextStyle(fontSize: 8, fontWeight: FontWeight.w400),
+                    maxLines: 3,
+                    overflow: TextOverflow.fade,
+                  ),
+
+                  Text(
+                    "리뷰 {리뷰개수} / 평균 {평균금액}원", //{우리 DB에서 들고 올 데이터}
+                    style: TextStyle(fontSize: 8, fontWeight: FontWeight.w400),
+                  ),
+
+                  Text(
+                    "주소\t${widget.info?['road_address_name']}",
+                    style: TextStyle(fontSize: 8, fontWeight: FontWeight.w400),
+                  ),
+
+                  Text(
+                    "영업시간\t {우리 DB에서 들고 올 데이터}",
+                    style: TextStyle(fontSize: 8, fontWeight: FontWeight.w400),
+                  ),
+
+                  Text(
+                    "전화번호\t  ${widget.info?['phone']}",
+                    style: TextStyle(fontSize: 8, fontWeight: FontWeight.w400),
+                  ),
+
+                  Text(
+                    "주차\t {우리 DB에서 들고 올 데이터}",
+                    style: TextStyle(fontSize: 8, fontWeight: FontWeight.w400),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

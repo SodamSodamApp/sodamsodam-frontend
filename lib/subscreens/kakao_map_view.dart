@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:js_interop';
 import 'dart:ui_web' as ui;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:js/js_util.dart' as js_util;
@@ -9,18 +8,23 @@ import 'package:web/web.dart' as dom;
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
+typedef ValueChanged<T> = void Function(T newValue);
+
 class KakaoMapController {
   KakaoMapController._(this._state);
   final _KakaoMapViewState _state;
 
   void addMarker(double lat, double lng, Map<String, dynamic> info) {
-    //print('tlqkfd');
-    _state._addMarker(createLatLng(lat, lng), info); // 내부 실제 로직 호출
+    _state._addMarker(createLatLng(lat, lng), info);
   }
 
   void clearMarkers() => _state._clearMarkers();
 
   (double, double) getCenter() => _state._getCenter();
+
+  bool getIsMarkerSelected() => _state._getIsMarkerSelected();
+
+  Map<String, dynamic>? getSelectedInfo() => _state._getSelectedInfo();
 }
 
 class KakaoMapView extends StatefulWidget {
@@ -31,12 +35,15 @@ class KakaoMapView extends StatefulWidget {
     required this.borderRadius,
     required this.tag,
     this.onMapReady,
+    this.onChanged,
   });
   final bool draggable;
   final bool zoomable;
   final double borderRadius;
 
   final String tag;
+
+  final ValueChanged<Map<String, dynamic>?>? onChanged;
 
   final void Function(KakaoMapController controller)? onMapReady;
 
@@ -51,6 +58,9 @@ class _KakaoMapViewState extends State<KakaoMapView>
   late KakaoMap _map;
   final List<Marker> _markers = <Marker>[];
   bool flag = false;
+
+  Map<String, dynamic>? _selectedInfo;
+  bool _isMarkerseleted = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -83,11 +93,10 @@ class _KakaoMapViewState extends State<KakaoMapView>
       return;
     }
     final c = Completer<void>();
-    js_util.callMethod(
-      js_util.getProperty(js_util.getProperty(g, 'kakao'), 'maps'),
-      'load',
-      [js_util.allowInterop(() => c.complete())],
-    );
+    final maps = js_util.getProperty(js_util.getProperty(g, 'kakao'), 'maps');
+    js_util.callMethod(maps, 'load', [
+      js_util.allowInterop(() => c.complete()),
+    ]);
     await c.future;
   }
 
@@ -143,17 +152,33 @@ class _KakaoMapViewState extends State<KakaoMapView>
     _markers.add(m);
     print(_markers);
 
-    js_util.callMethod(
-      js_util.getProperty(js_util.globalThis, 'kakao').maps.event,
-      'addListener',
-      [
-        m,
-        'click',
-        js_util.allowInterop((event) {
-          _onMarkerClicked(m, info);
-        }),
-      ],
-    );
+    final kakao = js_util.getProperty(js_util.globalThis, 'kakao');
+    final maps = js_util.getProperty(kakao, 'maps');
+    final event = js_util.getProperty(maps, 'event');
+    js_util.callMethod(event, 'addListener', [
+      m,
+      'click',
+      js_util.allowInterop(
+        (e) => _onMarkerTapped(info), //_onMarkerClicked(m, info)
+      ),
+    ]);
+  }
+
+  void _onMarkerTapped(Map<String, dynamic> info) {
+    setState(() {
+      _selectedInfo = info;
+      _isMarkerseleted = true;
+
+      widget.onChanged?.call(_selectedInfo);
+    });
+  }
+
+  bool _getIsMarkerSelected() {
+    return _isMarkerseleted;
+  }
+
+  Map<String, dynamic>? _getSelectedInfo() {
+    return _selectedInfo;
   }
 
   void _onMarkerClicked(Marker clickedMarker, Map<String, dynamic> info) {
@@ -191,126 +216,3 @@ class _KakaoMapViewState extends State<KakaoMapView>
     _markers.clear();
   }
 }
-
-/**
- * 
-import 'dart:async';
-import 'dart:js_interop';
-import 'dart:js_interop_unsafe';
-import 'dart:ui_web' as ui;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:sodamsodam_app/services/kakao_map_interop_service.dart';
-import 'package:web/web.dart';
-
-import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
-
-
-class KakaoMapView extends StatefulWidget {
-  const KakaoMapView({
-    super.key,
-    required this.draggable,
-    required this.zoomable,
-    required this.borderRadius,
-    required this.tag,
-    required this.zoomlevel,
-    this.onMapReady,
-  });
-  final bool draggable;
-  final bool zoomable;
-  final double borderRadius;
-  final int zoomlevel;
-
-  final String tag;
-
-  final void Function(KakaoMapController controller)? onMapReady;
-
-  @override
-  State<KakaoMapView> createState() => _KakaoMapViewState();
-}
-
-class _KakaoMapViewState extends State<KakaoMapView>
-    with AutomaticKeepAliveClientMixin<KakaoMapView> {
-  final _htmlId = 'kakao-map-${DateTime.now().millisecondsSinceEpoch}';
-
-  late KakaoMap _map;
-  final List<Marker> _markers = [];
-
-  bool flag = false;
-
-  @override
-  bool get wantKeepAlive => true;
-
-  @override
-  void initState() {
-    super.initState();
-
-    // 뷰팩토리 등록
-    ui.platformViewRegistry.registerViewFactory(_htmlId, (int viewId) {
-      final div =
-          HTMLDivElement()
-            ..id = _htmlId
-            ..style.width = '100%'
-            ..style.height = '100%'
-            ..style.borderRadius = '${widget.borderRadius}px';
-      return div;
-    });
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _initMap().catchError((e) {
-        debugPrint('지도 초기화 오류: $e');
-      });
-    });
-  }
-
-  Future<void> _initMap() async {
-    try {
-      if (!flag) {
-        await KakaoMapSDK.initializeWithRetry(
-          apiKey: dotenv.get("KAKAO_JAVASCRIPTKEY"),
-        );
-
-        HTMLElement? container;
-        const retryInterval = Duration(milliseconds: 50);
-        final timeout = Duration(seconds: 5);
-        final stopwatch = Stopwatch()..start();
-        while ((container = document.getElementById(_htmlId) as HTMLElement?) ==
-            null) {
-          if (stopwatch.elapsed > timeout) {
-            throw Exception('지도 컨테이너($_htmlId) 찾기 타임아웃');
-          }
-          await Future.delayed(retryInterval);
-        }
-
-        final pos = await Geolocator.getCurrentPosition();
-
-        final LatLng center = LatLng(pos.latitude, pos.longitude);
-        final MapOptions opts = MapOptions(center: center, level: 5);
-
-        _map = KakaoMap(container!, opts);
-        _map.setDraggable(widget.draggable);
-        _map.setZoomable(widget.zoomable);
-        _map.setCenter(center);
-
-        widget.onMapReady?.call(KakaoMapController(_map));
-        flag = !flag;
-      }
-    } catch (e) {
-      debugPrint('최종 초기화 실패: $e');
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    super.build(context);
-    return HtmlElementView(viewType: _htmlId);
-    /**FutureBuilder(
-      future: _initMap(),
-      builder: (BuildContext context, AsyncSnapshot snapshot) {
-        return
-      },
-    ); */
-  }
-}
-
- */
