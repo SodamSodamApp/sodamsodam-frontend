@@ -8,8 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:sodamsodam_app/subscreens/kakao_map_view.dart';
-import 'package:sodamsodam_app/subscreens/placeSuggestionCard.dart';
-import 'package:sodamsodam_app/services/kakaoRestApiService.dart';
+import 'package:sodamsodam_app/subscreens/place_suggestion_card.dart';
+import 'package:sodamsodam_app/services/rest_api_service.dart';
 
 //const String kakaoMapKey = '95f0a77720a3ac4f74b5ae89927a5a9a'; // .env 전환 해야 함
 
@@ -162,11 +162,7 @@ class _MainpageState extends State<Mainpage> {
                     draggable: false,
                     zoomable: false,
                     borderRadius: 35,
-                    onMapReady: (controller) {
-                      setState(() {
-                        _currentIndex = 1;
-                      });
-                    },
+                    onMapReady: (controller) {},
                   ),
                 ),
 
@@ -239,12 +235,9 @@ class _MainpageState extends State<Mainpage> {
                 tag: 'map1', // 고유 태그 지정
                 draggable: true,
                 zoomable: true,
-                borderRadius: 16,
+                borderRadius: 0,
                 onMapReady: (controller) {
                   setState(() => _controller = controller);
-                  setState(() {
-                    _currentIndex = 0;
-                  });
                 },
               ),
             ),

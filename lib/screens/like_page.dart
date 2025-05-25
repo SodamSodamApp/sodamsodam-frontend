@@ -16,6 +16,6 @@ class LikePage extends StatefulWidget {
 class _LikePageState extends State<LikePage> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: Container(child: Text("like")));
+    return Scaffold(body: Container(color: Colors.white, child: Text("like")));
   }
 }

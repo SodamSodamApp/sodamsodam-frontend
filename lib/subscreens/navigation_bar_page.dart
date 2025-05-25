@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:sodamsodam_app/screens/likePage.dart';
-import 'package:sodamsodam_app/screens/mainPage.dart';
-import 'package:sodamsodam_app/screens/myBookingPage.dart';
-import 'package:sodamsodam_app/screens/myProfilePage.dart';
-import 'package:sodamsodam_app/screens/reviewPage.dart';
+import 'package:sodamsodam_app/screens/like_page.dart';
+import 'package:sodamsodam_app/screens/main_page.dart';
+import 'package:sodamsodam_app/screens/my_booking_page.dart';
+import 'package:sodamsodam_app/screens/my_profile_page.dart';
+import 'package:sodamsodam_app/screens/review_page.dart';
 
 class NavigationBarPage extends StatefulWidget {
   final VoidCallback onLogin;

@@ -87,3 +87,7 @@ class KakaoPlace {
     'y': lat.toString(),
   };
 }
+
+class SodamApiService {
+  static Future<void> login() async {}
+}

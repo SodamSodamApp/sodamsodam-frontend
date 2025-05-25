@@ -16,6 +16,8 @@ class MyBookingPage extends StatefulWidget {
 class _MyBookingPageState extends State<MyBookingPage> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: Container(child: Text("booking")));
+    return Scaffold(
+      body: Container(color: Colors.white, child: Text("booking")),
+    );
   }
 }

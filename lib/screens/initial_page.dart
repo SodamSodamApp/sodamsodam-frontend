@@ -5,10 +5,10 @@
 
 import 'package:flutter/material.dart';
 //import 'package:flutter_svg/flutter_svg.dart';
-import 'package:sodamsodam_app/subscreens/naviationBarPage.dart';
+import 'package:sodamsodam_app/subscreens/navigation_bar_page.dart';
 import 'package:sodamsodam_app/main.dart';
 import 'package:sodamsodam_app/services/auth_services.dart';
-import 'package:sodamsodam_app/services/kakaoRestApiService.dart';
+import 'package:sodamsodam_app/services/rest_api_service.dart';
 
 class InitialPage extends StatefulWidget {
   final VoidCallback onLogin;

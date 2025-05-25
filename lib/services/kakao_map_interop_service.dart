@@ -19,6 +19,11 @@ extension type KakaoMap._(JSObject _) implements JSObject {
   external void setZoomable(bool enabled);
 }
 
+extension type KakaoMaps(JSObject _) implements JSObject {
+  @JS('load')
+  external void load(JSFunction callback);
+}
+
 @JS('kakao.maps.Marker')
 extension type Marker._(JSObject _) implements JSObject {
   external factory Marker(MarkerOptions options);
@@ -117,13 +122,11 @@ Future<void> loadKakaoSdk(String apiKey) async {
   final completer = Completer<void>();
 
   // SDK 로드 완료 콜백
-  void onLoaded() {
-    if (!completer.isCompleted) completer.complete();
-  }
-
   if (document.getElementById('kakao-sdk') != null) {
-    onLoaded();
-    return;
+    if (window.has('kakao')) {
+      completer.complete();
+      return completer.future;
+    }
   }
 
   final script =
@@ -132,9 +135,41 @@ Future<void> loadKakaoSdk(String apiKey) async {
         ..defer = true
         ..src =
             'https://dapi.kakao.com/v2/maps/sdk.js?appkey=$apiKey&autoload=false';
-  document.head!.append(script);
 
-  await script.onLoad.first;
+  script.onError.listen((_) {
+    if (!completer.isCompleted) {
+      completer.completeError(Exception('SDK 로드 실패'));
+    }
+  });
+
+  script.onLoad.listen((_) async {
+    try {
+      // 반드시 호출해야 하는 초기화 함수
+      await _waitForKakaoReady();
+      completer.complete();
+    } catch (e) {
+      completer.completeError(e);
+    }
+  });
+
+  document.head!.append(script);
+  return completer.future;
+}
+
+Future<void> _waitForKakaoReady() async {
+  final completer = Completer<void>();
+
+  // 콜백 함수 변환 (안전한 타입 변환)
+  final callback =
+      (() {
+        if (!completer.isCompleted) completer.complete();
+      }).toJS;
+
+  // 명시적 타입 캐스팅 및 메서드 직접 호출
+  final maps = kakao.maps as KakaoMaps;
+  maps.load(callback);
+
+  await completer.future;
 }
 
 class KakaoSDKInitializer {

@@ -19,6 +19,8 @@ class ReviewPage extends StatefulWidget {
 class _ReviewPageState extends State<ReviewPage> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: Container(child: Text("review")));
+    return Scaffold(
+      body: Container(color: Colors.white, child: Text("review")),
+    );
   }
 }

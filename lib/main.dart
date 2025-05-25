@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:sodamsodam_app/screens/initialPage.dart';
-import 'package:sodamsodam_app/screens/mainPage.dart';
-import 'package:sodamsodam_app/subscreens/naviationBarPage.dart';
+import 'package:sodamsodam_app/screens/initial_page.dart';
+import 'package:sodamsodam_app/screens/main_page.dart';
+import 'package:sodamsodam_app/subscreens/navigation_bar_page.dart';
 import 'package:sodamsodam_app/services/auth_services.dart';
-import 'package:sodamsodam_app/services/kakaoMapInteropService.dart';
+import 'package:sodamsodam_app/services/kakao_map_interop_service.dart';
 
 /// 실행 파일
 
@@ -46,7 +46,7 @@ class _MainAppState extends State<MainApp> {
     return MaterialApp(
       theme: ThemeData(
         primaryColor: Color(0xFFD9D9D9),
-        scaffoldBackgroundColor: Colors.white,
+        scaffoldBackgroundColor: Color(0xFFD9D9D9),
 
         fontFamily: 'Pretendard',
       ),

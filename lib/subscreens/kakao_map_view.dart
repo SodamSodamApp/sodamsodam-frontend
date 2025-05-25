@@ -3,7 +3,7 @@ import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 import 'dart:ui_web' as ui;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:sodamsodam_app/services/kakaoMapInteropService.dart';
+import 'package:sodamsodam_app/services/kakao_map_interop_service.dart';
 import 'package:web/web.dart' as dom;
 
 import 'package:flutter/material.dart';
@@ -14,7 +14,6 @@ class KakaoMapController {
   final _KakaoMapViewState _state;
 
   void addMarker(double lat, double lng, Map<String, dynamic> info) {
-    print('tlqkfd');
     _state._addMarker(createLatLng(lat, lng), info); // 내부 실제 로직 호출
   }
 

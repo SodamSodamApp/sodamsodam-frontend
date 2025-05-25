@@ -9,7 +9,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:sodamsodam_app/services/auth_services.dart';
-import 'package:sodamsodam_app/services/kakaoRestApiService.dart';
+import 'package:sodamsodam_app/services/rest_api_service.dart';
 
 class MyProfilePage extends StatefulWidget {
   final VoidCallback onLogin;
@@ -36,19 +36,22 @@ class _MyProfilePageState extends State<MyProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          InkWell(
-            onTap: () {
-              AuthService.logout();
-              print("logout?");
-              widget.offLogin();
-            },
-            child: Container(color: Colors.blue, child: Text("LogOut")),
-          ),
-        ],
+      body: Container(
+        color: Colors.white,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            InkWell(
+              onTap: () {
+                AuthService.logout();
+                print("logout?");
+                widget.offLogin();
+              },
+              child: Container(color: Colors.blue, child: Text("LogOut")),
+            ),
+          ],
+        ),
       ),
     );
   }
