@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:sodamsodam_app/screens/initial_page.dart';
@@ -14,6 +15,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: 'assets/config/.env');
 
+  //KakaoSdk.init(javaScriptAppKey: '8d2d54ac77f24e23292e3ff2989d2c1a');
   runApp(MainApp());
 }
 

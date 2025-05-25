@@ -68,6 +68,7 @@ class _InitialPageState extends State<InitialPage> {
                   onTap: () {
                     AuthService.login();
                     print("kakao login");
+
                     widget.onLogin();
 
                     /**Navigator.pushReplacement(

@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:sodamsodam_app/services/kakao_map_interop_service.dart';
 import 'package:sodamsodam_app/subscreens/kakao_map_view.dart';
 import 'package:sodamsodam_app/subscreens/place_suggestion_card.dart';
 import 'package:sodamsodam_app/services/rest_api_service.dart';
@@ -334,11 +335,11 @@ class _MainpageState extends State<Mainpage> {
   }
 
   void getSearchResult(String keyword) async {
-    final pos = await Geolocator.getCurrentPosition();
+    (double, double) pos = _controller!.getCenter();
     List<KakaoPlace> data = await KakaoApiService.keywordSearch(
       keyword: keyword,
-      x: pos.longitude,
-      y: pos.latitude,
+      x: pos.$2,
+      y: pos.$1,
     );
     setState(() {
       places
@@ -346,6 +347,7 @@ class _MainpageState extends State<Mainpage> {
         ..addAll(data);
     });
 
+    _controller?.clearMarkers();
     for (KakaoPlace e in places) {
       print(e.name);
 
