@@ -1,8 +1,16 @@
 import 'dart:convert';
+import 'dart:js_interop';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
+import 'package:flutter/material.dart';
+
+import 'dart:html' as html;
+import 'package:js/js_util.dart' as js_util;
+import 'dart:math';
+import 'package:kakao_flutter_sdk_auth/kakao_flutter_sdk_auth.dart';
+import 'package:kakao_flutter_sdk_common/kakao_flutter_sdk_common.dart';
 
 class KakaoApiService {
   static Future<List<KakaoPlace>> keywordSearch({
@@ -89,37 +97,31 @@ class KakaoPlace {
   };
 }
 
-class KakaoLoginApi {
-  signWithKakao() async {
-    bool talkInstalled = await isKakaoTalkInstalled();
-    var response;
+/**
+ * class KakaoLoginApi {
+  Future<void> kakaoLogin() async {
+    try {
+      String? authCode;
+      if (await isKakaoTalkInstalled()) {
+        authCode = await AuthCodeClient.instance.authorizeWithTalk(
+          redirectUri: 'kakao${KakaoSdk.nativeAppKey}://oauth', // 앱 스킴 사용
+        );
+      } else {
+        authCode = await AuthCodeClient.instance.authorize(
+          redirectUri: 'kakao${KakaoSdk.nativeAppKey}://oauth',
+        );
+      }
 
-    // 카카오톡 실행 가능 여부 확인
-    // 카카오톡 실행이 가능하면 카카오톡으로 로그인, 아니면 카카오계정으로 로그인
-    if (talkInstalled) {
-      // 카카오톡으로 로그인
-      try {
-        response = await AuthCodeClient.instance.authorizeWithTalk(
-          redirectUri: 'http://localhost:8080/login/oauth2/code/kakao',
+      if (authCode != null) {
+        final token = await AuthApi.instance.issueAccessToken(
+          authCode: authCode,
         );
-      } catch (error) {
-        print('Login with Kakao Talk fails $error');
+        TokenManagerProvider.instance.manager.setToken(token);
+        print('accessToken ▶︎ ${token.accessToken}');
       }
-    } else {
-      // 카카오계정으로 로그인
-      try {
-        response = await AuthCodeClient.instance.authorize(
-          redirectUri: 'http://localhost:8080/login/oauth2/code/kakao',
-        );
-      } catch (error) {
-        print('Login with Kakao Account fails. $error');
-      }
+    } catch (e) {
+      print('카카오 로그인 실패: $e');
     }
-
-    var tokenResponse = AccessTokenResponse.fromJson(response);
-    var token = OAuthToken.fromResponse(tokenResponse);
-
-    // 토큰 저장
-    TokenManagerProvider.instance.manager.setToken(token);
   }
 }
+ */

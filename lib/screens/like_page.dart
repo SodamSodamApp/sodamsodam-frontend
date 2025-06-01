@@ -14,8 +14,57 @@ class LikePage extends StatefulWidget {
 }
 
 class _LikePageState extends State<LikePage> {
+  int _isSelected = 0;
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: Container(color: Colors.white, child: Text("like")));
+    return Scaffold(
+      body: SizedBox.expand(
+        child: FittedBox(
+          child: Column(
+            children: [
+              Container(
+                height: 155,
+                width: 375,
+                color: Colors.white,
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border(
+                              bottom: BorderSide(
+                                color:
+                                    _isSelected == 0
+                                        ? Colors.black
+                                        : Color(0xFF1B41FF),
+                                width: _isSelected == 0 ? 1 : 3,
+                              ),
+                            ),
+                          ),
+                          child: Text(
+                            "리뷰",
+                            style: TextStyle(
+                              color:
+                                  _isSelected == 0
+                                      ? Colors.black
+                                      : Color(0xFF1B41FF),
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -391,7 +391,7 @@ class _SecondMainPageState extends State<SecondMainPage> {
           bottom: 0,
           left: 0,
           right: 0,
-          child: PlaceInfo(_selectedinfo, _isMarkerSelected),
+          child: PlaceInfo(_selectedinfo, isSelected: _isMarkerSelected),
         ),
       ],
     );
@@ -421,8 +421,8 @@ class _SecondMainPageState extends State<SecondMainPage> {
 
 class PlaceInfo extends StatefulWidget {
   final Map<String, dynamic>? info;
-  final bool isSelected;
-  const PlaceInfo(this.info, this.isSelected, {super.key});
+  bool isSelected = false;
+  PlaceInfo(this.info, {super.key, required this.isSelected});
 
   @override
   State<PlaceInfo> createState() => _PlaceInfoState();
@@ -434,215 +434,272 @@ class _PlaceInfoState extends State<PlaceInfo> {
     return Visibility(
       visible: widget.isSelected,
       child: Container(
-        height: 277,
-        width: 375,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(30),
-            topRight: Radius.circular(30),
+        alignment: Alignment.bottomCenter,
+        height: MediaQuery.of(context).size.height,
+        width: MediaQuery.of(context).size.width,
+        child: Container(
+          height: 277,
+          width: 375,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(30),
+              topRight: Radius.circular(30),
+            ),
           ),
-        ),
-        child: Column(
-          children: [
-            Container(
-              //이미지 자리 -> 카카오 지도에서 못들고 온다네요...?
-              decoration: BoxDecoration(
-                color: Color(0xFFE6E5E2),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  topRight: Radius.circular(30),
-                ),
+          child: Column(
+            children: [
+              Stack(
+                children: [
+                  Container(
+                    //이미지 자리 -> 카카오 지도에서 못들고 온다네요...?
+                    decoration: BoxDecoration(
+                      color: Color(0xFFE6E5E2),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(30),
+                        topRight: Radius.circular(30),
+                      ),
+                    ),
+                    height: 129,
+                    width: 375,
+                  ),
+
+                  Positioned(
+                    top: 20,
+                    right: 15,
+                    child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          widget.isSelected = !widget.isSelected;
+                        });
+                      },
+                      child: Icon(Icons.close, size: 15),
+                    ),
+                  ),
+                ],
               ),
-              height: 129,
-              width: 375,
-            ),
-            Expanded(
-              child: Container(
-                color: Colors.white,
-                margin: EdgeInsets.fromLTRB(10, 20, 10, 5),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      margin: EdgeInsets.fromLTRB(0, 0, 0, 5),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+              Expanded(
+                child: Container(
+                  color: Colors.white,
+                  margin: EdgeInsets.fromLTRB(10, 20, 10, 5),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        margin: EdgeInsets.fromLTRB(0, 0, 0, 5),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              widget.info?['place_name'],
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+
+                            InkWell(
+                              onTap: () {
+                                // 찜 여부 변경경
+                              },
+                              child: Icon(
+                                Icons
+                                    .favorite_border_outlined, //여기도 조건으로 해야할 것임 <-> Icons.favorite_outlined,
+                                size: 15,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      Container(
+                        height: 30,
+                        child: Text(
+                          "장소 설명 적는 곳입니다. Kakao 장소 겁새으로는 얻을 수 없을 거 같고 앱에 설명을 등록하고 불러와야하지않나...띄우면 업종 정도 바로 띄울 수 있습니다.",
+                          style: TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.w400,
+                          ),
+                          maxLines: 3,
+                          overflow: TextOverflow.fade,
+                        ),
+                      ),
+
+                      Container(
+                        margin: EdgeInsets.fromLTRB(0, 3, 0, 3),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Text(
+                              "리뷰 ", //{우리 DB에서 들고 올 데이터}
+                              style: TextStyle(
+                                fontSize: 8,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+
+                            Text(
+                              "{리뷰개수}", //{우리 DB에서 들고 올 데이터}
+                              style: TextStyle(
+                                fontSize: 8,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+
+                            Text(
+                              " / 평균 ", //{우리 DB에서 들고 올 데이터}
+                              style: TextStyle(
+                                fontSize: 8,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+
+                            Text(
+                              "{평균금액}", //{우리 DB에서 들고 올 데이터}
+                              style: TextStyle(
+                                fontSize: 8,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+
+                            Text(
+                              "원", //{우리 DB에서 들고 올 데이터}
+                              style: TextStyle(
+                                fontSize: 8,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      Row(
                         children: [
-                          Text(
-                            widget.info?['place_name'],
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
+                          Container(
+                            height: 56,
+                            margin: EdgeInsets.fromLTRB(0, 0, 10, 0),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "주소",
+                                  style: TextStyle(
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w400,
+                                    color: Color(0xff535353),
+                                  ),
+                                ),
+
+                                Text(
+                                  "영업시간",
+                                  style: TextStyle(
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w400,
+                                    color: Color(0xff535353),
+                                  ),
+                                ),
+
+                                Text(
+                                  "전화번호",
+                                  style: TextStyle(
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w400,
+                                    color: Color(0xff535353),
+                                  ),
+                                ),
+
+                                Text(
+                                  "주차",
+                                  style: TextStyle(
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w400,
+                                    color: Color(0xff535353),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
 
-                          Icon(Icons.favorite_border_outlined, size: 15),
+                          Container(
+                            height: 56,
+                            width: 220,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  widget.info?['road_address_name'],
+                                  style: TextStyle(
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w400,
+                                    color: Color(0xff535353),
+                                  ),
+                                ),
+
+                                Text(
+                                  "{우리 DB에서 들고 올 데이터}",
+                                  style: TextStyle(
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w400,
+                                    color: Color(0xff535353),
+                                  ),
+                                ),
+
+                                Text(
+                                  widget.info?['phone'],
+                                  style: TextStyle(
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w400,
+                                    color: Color(0xff535353),
+                                  ),
+                                ),
+
+                                Text(
+                                  "{우리 DB에서 들고 올 데이터}",
+                                  style: TextStyle(
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w400,
+                                    color: Color(0xff535353),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          Container(
+                            alignment: Alignment.bottomRight,
+                            height: 56,
+                            child: InkWell(
+                              onTap: () {},
+                              child: Container(
+                                alignment: Alignment.center,
+                                height: 22,
+                                width: 68,
+                                decoration: BoxDecoration(
+                                  color: Color(0xFFD9D9D9),
+                                  borderRadius: BorderRadius.circular(11),
+                                ),
+                                child: Text(
+                                  "예약하기",
+                                  style: TextStyle(
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
                         ],
                       ),
-                    ),
-
-                    Container(
-                      height: 30,
-                      child: Text(
-                        "장소 설명 적는 곳입니다. Kakao 장소 겁새으로는 얻을 수 없을 거 같고 앱에 설명을 등록하고 불러와야하지않나...띄우면 업종 정도 바로 띄울 수 있습니다.",
-                        style: TextStyle(
-                          fontSize: 8,
-                          fontWeight: FontWeight.w400,
-                        ),
-                        maxLines: 3,
-                        overflow: TextOverflow.fade,
-                      ),
-                    ),
-
-                    Container(
-                      margin: EdgeInsets.fromLTRB(0, 3, 0, 3),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Text(
-                            "리뷰 ", //{우리 DB에서 들고 올 데이터}
-                            style: TextStyle(
-                              fontSize: 8,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-
-                          Text(
-                            "{리뷰개수}", //{우리 DB에서 들고 올 데이터}
-                            style: TextStyle(
-                              fontSize: 8,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-
-                          Text(
-                            " / 평균 ", //{우리 DB에서 들고 올 데이터}
-                            style: TextStyle(
-                              fontSize: 8,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-
-                          Text(
-                            "{평균금액}", //{우리 DB에서 들고 올 데이터}
-                            style: TextStyle(
-                              fontSize: 8,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-
-                          Text(
-                            "원", //{우리 DB에서 들고 올 데이터}
-                            style: TextStyle(
-                              fontSize: 8,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    Row(
-                      children: [
-                        Container(
-                          height: 56,
-                          margin: EdgeInsets.fromLTRB(0, 0, 10, 0),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "주소",
-                                style: TextStyle(
-                                  fontSize: 8,
-                                  fontWeight: FontWeight.w400,
-                                  color: Color(0xff535353),
-                                ),
-                              ),
-
-                              Text(
-                                "영업시간",
-                                style: TextStyle(
-                                  fontSize: 8,
-                                  fontWeight: FontWeight.w400,
-                                  color: Color(0xff535353),
-                                ),
-                              ),
-
-                              Text(
-                                "전화번호",
-                                style: TextStyle(
-                                  fontSize: 8,
-                                  fontWeight: FontWeight.w400,
-                                  color: Color(0xff535353),
-                                ),
-                              ),
-
-                              Text(
-                                "주차",
-                                style: TextStyle(
-                                  fontSize: 8,
-                                  fontWeight: FontWeight.w400,
-                                  color: Color(0xff535353),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        Container(
-                          height: 56,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                widget.info?['road_address_name'],
-                                style: TextStyle(
-                                  fontSize: 8,
-                                  fontWeight: FontWeight.w400,
-                                  color: Color(0xff535353),
-                                ),
-                              ),
-
-                              Text(
-                                "{우리 DB에서 들고 올 데이터}",
-                                style: TextStyle(
-                                  fontSize: 8,
-                                  fontWeight: FontWeight.w400,
-                                  color: Color(0xff535353),
-                                ),
-                              ),
-
-                              Text(
-                                widget.info?['phone'],
-                                style: TextStyle(
-                                  fontSize: 8,
-                                  fontWeight: FontWeight.w400,
-                                  color: Color(0xff535353),
-                                ),
-                              ),
-
-                              Text(
-                                "{우리 DB에서 들고 올 데이터}",
-                                style: TextStyle(
-                                  fontSize: 8,
-                                  fontWeight: FontWeight.w400,
-                                  color: Color(0xff535353),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -4,6 +4,8 @@
  */
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:sodamsodam_app/services/kakao_map_interop_service.dart';
 //import 'package:flutter_svg/flutter_svg.dart';
 import 'package:sodamsodam_app/subscreens/navigation_bar_page.dart';
 import 'package:sodamsodam_app/main.dart';
@@ -13,77 +15,107 @@ import 'package:sodamsodam_app/services/rest_api_service.dart';
 class InitialPage extends StatefulWidget {
   final VoidCallback onLogin;
   final VoidCallback offLogin;
-  const InitialPage({super.key, required this.onLogin, required this.offLogin});
+  final KakaoLoginService service;
+
+  const InitialPage({
+    super.key,
+    required this.onLogin,
+    required this.offLogin,
+    required this.service,
+  });
 
   @override
   State<StatefulWidget> createState() => _InitialPageState();
 }
 
 class _InitialPageState extends State<InitialPage> {
+  bool _loading = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkCallback();
+  }
+
+  Future<void> _checkCallback() async {
+    // URL에 code 파라미터가 있으면 콜백 처리
+    if (Uri.base.queryParameters.containsKey('code')) {
+      setState(() => _loading = true);
+      try {
+        await AuthService.handleKakaoCallback(widget.service);
+        widget.onLogin();
+        if (!mounted) return;
+        context.go('/home'); // 홈으로 이동
+      } catch (e) {
+        setState(() {
+          _error = e.toString();
+          _loading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _startLogin() async {
+    setState(() => _loading = true);
+    try {
+      await AuthService.startKakaoLogin(widget.service);
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
-    const double ratio = 375 / 812;
-
-    return SizedBox.expand(
-      child: Container(
-        color: Color(0xFFFFF6EA),
-        child: FittedBox(
-          fit: BoxFit.contain,
-          alignment: Alignment.topCenter,
-          child: Container(
-            height: MediaQuery.of(context).size.height,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Container(
-                  margin: EdgeInsets.fromLTRB(60, 0, 60, 0),
-                  height: 230,
-                  width: 230,
-                  child: Stack(
-                    alignment: Alignment.bottomCenter,
-                    children: [
-                      Image.asset(
-                        'assets/image/logo.png',
-                      ), // 깨짐. svg 파일이나 원본(고화질) png 받아야할 듯,
-
-                      Text(
-                        "소담소담",
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontFamily: 'Gugi',
-                          fontSize: 24,
-                          fontWeight: FontWeight.w400,
-                          textBaseline: TextBaseline.alphabetic,
+    return Scaffold(
+      body: Container(
+        color: const Color(0xFFFFF6EA),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              // 로고 영역
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 60),
+                height: 230,
+                width: 230,
+                child: Stack(
+                  alignment: Alignment.bottomCenter,
+                  children: [
+                    if (_error != null)
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          _error!,
+                          style: const TextStyle(color: Colors.red),
+                          textAlign: TextAlign.center,
                         ),
                       ),
-                    ],
-                  ),
-                ),
-
-                InkWell(
-                  hoverColor: const Color.fromARGB(0x50, 0xe8, 0xea, 0xf6),
-
-                  onTap: () {
-                    AuthService.login();
-                    print("kakao login");
-
-                    widget.onLogin();
-
-                    /**Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder:
-                      (context) => NavigationBarPage(
-                        onLogin: widget.onLogin,
-                        offLogin: widget.offLogin,
+                    Image.asset('assets/image/logo.png'),
+                    const Text(
+                      "소담소담",
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontFamily: 'Gugi',
+                        fontSize: 24,
+                        fontWeight: FontWeight.w400,
                       ),
+                    ),
+                  ],
                 ),
-              ); */
-                  },
+              ),
+
+              // 카카오 로그인 버튼
+              if (_loading)
+                const CircularProgressIndicator()
+              else
+                InkWell(
+                  onTap: _startLogin,
                   child: Container(
-                    margin: EdgeInsets.fromLTRB(60, 0, 60, 0),
+                    margin: const EdgeInsets.symmetric(horizontal: 60),
                     width: 250,
                     height: 45,
                     child: Image.asset(
@@ -91,8 +123,7 @@ class _InitialPageState extends State<InitialPage> {
                     ),
                   ),
                 ),
-              ],
-            ),
+            ],
           ),
         ),
       ),

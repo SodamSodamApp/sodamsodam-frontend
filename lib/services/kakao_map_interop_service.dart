@@ -4,6 +4,7 @@
 library kakao_maps;
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:js_interop';
 import 'dart:ui';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -164,5 +165,68 @@ class KakaoSDKInitializer {
     final g = js_util.globalThis;
     return js_util.hasProperty(g, 'kakao') &&
         js_util.hasProperty(js_util.getProperty(g, 'kakao'), 'maps');
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+@JS('Kakao')
+external JSAny get Kakao;
+
+class KakaoAuthLoader {
+  static const _scriptId = 'kakao-auth-sdk';
+  static const _sdkSrc = 'https://t1.kakaocdn.net/kakao_js_sdk/2.6.0/kakao.min.js';
+  static bool _isInitialized = false;
+
+  static bool _isLoaded() => js_util.hasProperty(js_util.globalThis, 'Kakao');
+
+  /// SDK 삽입 + Kakao.init(jsAppKey)
+  static Future<void> load({required String jsAppKey}) async {
+    if (_isInitialized) return;
+
+    try {
+      // 1) 이미 로드되었는지 확인
+      if (_isLoaded()) {
+        _initializeKakao(jsAppKey);
+        return;
+      }
+
+      // 2) <script> 태그 생성 및 삽입
+      final completer = Completer<void>();
+      final script = HTMLScriptElement()
+        ..id = _scriptId
+        ..type = 'text/javascript'
+        ..src = _sdkSrc
+        ..integrity = 'sha384-6MFdIr0zOira1CHQkedUqJVql0YtcZA1P0nbPrQYJXVJZUkTk/oX4U9GhUIs3/z8'
+        ..crossOrigin = 'anonymous';
+
+      // 3) 로드 완료 이벤트 핸들러
+      script.onLoad.listen((_) {
+        _initializeKakao(jsAppKey);
+        completer.complete();
+      });
+
+      // 4) 에러 핸들러
+      script.onError.listen((event) {
+        completer.completeError('Failed to load Kakao SDK: ${event.type}');
+      });
+
+      // 5) <script> 태그 삽입
+      document.head!.append(script);
+      await completer.future;
+      
+    } catch (e) {
+      print('Kakao SDK 로드 실패: $e');
+      rethrow;
+    }
+  }
+
+  static void _initializeKakao(String jsAppKey) {
+    if (!_isInitialized) {
+      final kakao = js_util.getProperty(js_util.globalThis, 'Kakao');
+      js_util.callMethod(kakao, 'init', [jsAppKey]);
+      _isInitialized = true;
+      print('Kakao SDK initialized successfully');
+    }
   }
 }

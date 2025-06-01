@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart' show GoRoute, GoRouter;
 import 'package:sodamsodam_app/screens/like_page.dart';
 import 'package:sodamsodam_app/screens/main_page.dart';
 import 'package:sodamsodam_app/screens/my_booking_page.dart';
 import 'package:sodamsodam_app/screens/my_profile_page.dart';
 import 'package:sodamsodam_app/screens/review_page.dart';
+import 'package:sodamsodam_app/services/auth_services.dart';
 
 class NavigationBarPage extends StatefulWidget {
   final VoidCallback onLogin;

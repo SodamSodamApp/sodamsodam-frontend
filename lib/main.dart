@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -15,8 +16,13 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: 'assets/config/.env');
 
-  //KakaoSdk.init(javaScriptAppKey: '8d2d54ac77f24e23292e3ff2989d2c1a');
-  runApp(MainApp());
+  // Kakao SDK 초기화
+  KakaoSdk.init(
+    javaScriptAppKey: dotenv.get('KAKAO_JAVASCRIPTKEY'),
+    loggingEnabled: true,
+  );
+
+  runApp(const MainApp());
 }
 
 class MainApp extends StatefulWidget {
@@ -27,46 +33,120 @@ class MainApp extends StatefulWidget {
 }
 
 class _MainAppState extends State<MainApp> {
-  static const double ratio = 375 / 812;
-  bool _loggedIn = AuthService.isLoggedIn();
+  late final GoRouter _router;
+  late final KakaoLoginService _kakaoService;
+  bool _loggedIn = false;
+  
+  // 원하는 화면 비율 설정
+  static const double targetAspectRatio = 375 / 812;  // 디자인 기준 비율
 
-  void _onLogin() {
-    setState(() {
-      _loggedIn = true;
-    });
+  @override
+  void initState() {
+    super.initState();
+    _loggedIn = AuthService.isLoggedIn();
+    
+    _kakaoService = KakaoLoginService(
+      backendBaseUrl: dotenv.get('BACKEND_URL'),
+      jsAppKey: dotenv.get('KAKAO_JAVASCRIPTKEY'),
+    );
+
+    _router = GoRouter(
+      routerNeglect: true, // 외부 URL 변경 무시
+      initialLocation: '/',
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (context, state) => _buildResponsiveLayout(
+            context,
+            _loggedIn
+                ? NavigationBarPage(
+                    onLogin: _onLogin,
+                    offLogin: _offLogin,
+                  )
+                : InitialPage(
+                    service: _kakaoService,
+                    onLogin: _onLogin,
+                    offLogin: _offLogin,
+                  ),
+          ),
+        ),
+        GoRoute(
+          path: '/kakao-callback',
+          builder: (context, state) => _buildResponsiveLayout(
+            context,
+            InitialPage(
+              service: _kakaoService,
+              onLogin: _onLogin,
+              offLogin: _offLogin,
+            ),
+          ),
+        ),
+        GoRoute(
+          path: '/home',
+          builder: (context, state) => _buildResponsiveLayout(
+            context,
+            NavigationBarPage(
+              onLogin: _onLogin,
+              offLogin: _offLogin,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
-  void _offLogin() {
-    setState(() {
-      _loggedIn = false;
-    });
+  void _onLogin() => setState(() => _loggedIn = true);
+  void _offLogin() => setState(() => _loggedIn = false);
+
+  Widget _buildResponsiveLayout(BuildContext context, Widget child) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = constraints.maxWidth;
+        final screenHeight = constraints.maxHeight;
+        final currentAspectRatio = screenWidth / screenHeight;
+
+        if (currentAspectRatio > targetAspectRatio) {
+          // 화면이 너무 넓을 때
+          final targetWidth = screenHeight * targetAspectRatio;
+          return Center(
+            child: SizedBox(
+              width: targetWidth,
+              height: screenHeight,
+              child: child,
+            ),
+          );
+        } else {
+          // 화면이 너무 높을 때
+          final targetHeight = screenWidth / targetAspectRatio;
+          return Center(
+            child: SizedBox(
+              width: screenWidth,
+              height: targetHeight,
+              child: child,
+            ),
+          );
+        }
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
-    return MaterialApp(
+    return MaterialApp.router(
+      routerConfig: _router,
+      title: '소담소담',
       theme: ThemeData(
-        primaryColor: Color(0xFFD9D9D9),
-        scaffoldBackgroundColor: Color(0xFFD9D9D9),
-
+        primaryColor: const Color(0xFFD9D9D9),
+        scaffoldBackgroundColor: const Color(0xFFD9D9D9),
         fontFamily: 'Pretendard',
       ),
-      home: Scaffold(
-        body: Container(
-          margin: EdgeInsets.all(30),
-          alignment: Alignment.center,
-          width: size.width,
-          height: size.height,
-          child: AspectRatio(
-            aspectRatio: ratio,
-            child:
-                AuthService.isLoggedIn()
-                    ? NavigationBarPage(onLogin: _onLogin, offLogin: _offLogin)
-                    : InitialPage(onLogin: _onLogin, offLogin: _offLogin),
-          ),
-        ),
-      ),
+      builder: (context, child) {
+        return MediaQuery(
+          // 시스템 설정과 관계없이 앱 내에서 텍스트 크기를 고정
+          data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+          child: child!,
+        );
+      },
     );
   }
 }
