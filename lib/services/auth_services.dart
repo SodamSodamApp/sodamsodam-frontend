@@ -136,7 +136,7 @@ class KakaoLoginService {
       // 로그인 요청
       final loginParams = js_util.jsify({
         'redirectUri': redirectUri,
-        'scope': 'profile_nickname, profile_image, account_email',
+        'scope': 'profile_nickname,profile_image,account_email',  // 공백 제거
       });
 
       js_util.callMethod(auth, 'authorize', [loginParams]);
@@ -159,10 +159,10 @@ class KakaoLoginService {
 
       print('Sending request to backend: ${url.toString()}');
 
+      // 단순 GET 요청으로 변경
       final res = await http.get(
         url,
         headers: {
-          'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
       );
@@ -171,12 +171,19 @@ class KakaoLoginService {
       print('Backend response body: ${res.body}');
 
       if (res.statusCode != 200) {
-        throw Exception('Backend error: ${res.statusCode}');
+        throw Exception('Backend error: ${res.statusCode} - ${res.body}');
       }
 
       final Map<String, dynamic> data = jsonDecode(res.body);
-      final token = data['accessToken'];
+      
+      // 다양한 토큰 필드명에 대응
+      final token = data['accessToken'] ?? 
+                   data['token'] ?? 
+                   data['access_token'] ??
+                   (data['data'] != null ? data['data']['accessToken'] : null);
+      
       if (token == null) {
+        print('Response data: $data'); // 응답 데이터 전체 출력
         throw Exception('Token not found in response');
       }
 
