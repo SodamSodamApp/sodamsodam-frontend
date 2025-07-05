@@ -15,13 +15,11 @@ import 'package:sodamsodam_app/services/rest_api_service.dart';
 class InitialPage extends StatefulWidget {
   final VoidCallback onLogin;
   final VoidCallback offLogin;
-  final KakaoLoginService service;
 
   const InitialPage({
     super.key,
     required this.onLogin,
     required this.offLogin,
-    required this.service,
   });
 
   @override
@@ -43,7 +41,7 @@ class _InitialPageState extends State<InitialPage> {
     if (Uri.base.queryParameters.containsKey('code')) {
       setState(() => _loading = true);
       try {
-        await AuthService.handleKakaoCallback(widget.service);
+        await AuthService.handleKakaoCallback();
         widget.onLogin();
         if (!mounted) return;
         context.go('/home'); // 홈으로 이동
@@ -59,7 +57,7 @@ class _InitialPageState extends State<InitialPage> {
   Future<void> _startLogin() async {
     setState(() => _loading = true);
     try {
-      await AuthService.startKakaoLogin(widget.service);
+      await AuthService.startKakaoLogin();
     } catch (e) {
       setState(() {
         _error = e.toString();

@@ -5,9 +5,6 @@
  */
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:sodamsodam_app/services/kakao_map_interop_service.dart';
 import 'package:sodamsodam_app/subscreens/kakao_map_view.dart';
 import 'package:sodamsodam_app/subscreens/place_suggestion_card.dart';
 import 'package:sodamsodam_app/services/rest_api_service.dart';
@@ -338,6 +335,7 @@ class _SecondMainPageState extends State<SecondMainPage> {
             },
           ),
         ),
+
         // 검색창
         SizedBox.expand(
           child: FittedBox(

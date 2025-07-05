@@ -1,9 +1,8 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:sodamsodam_app/screens/initial_page.dart';
 import 'package:sodamsodam_app/screens/main_page.dart';
 import 'package:sodamsodam_app/subscreens/navigation_bar_page.dart';
@@ -15,13 +14,6 @@ import 'package:sodamsodam_app/services/kakao_map_interop_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: 'assets/config/.env');
-
-  // Kakao SDK 초기화
-  KakaoSdk.init(
-    javaScriptAppKey: dotenv.get('KAKAO_JAVASCRIPTKEY'),
-    loggingEnabled: true,
-  );
-
   runApp(const MainApp());
 }
 
@@ -34,21 +26,15 @@ class MainApp extends StatefulWidget {
 
 class _MainAppState extends State<MainApp> {
   late final GoRouter _router;
-  late final KakaoLoginService _kakaoService;
-  bool _loggedIn = false;
-  
+  bool _loggedIn = true;
+
   // 원하는 화면 비율 설정
-  static const double targetAspectRatio = 375 / 812;  // 디자인 기준 비율
+  static const double targetAspectRatio = 375 / 812; // 디자인 기준 비율
 
   @override
   void initState() {
     super.initState();
-    _loggedIn = AuthService.isLoggedIn();
-    
-    _kakaoService = KakaoLoginService(
-      backendBaseUrl: dotenv.get('BACKEND_URL'),
-      jsAppKey: dotenv.get('KAKAO_JAVASCRIPTKEY'),
-    );
+    //_loggedIn = AuthService.isLoggedIn();
 
     _router = GoRouter(
       routerNeglect: true, // 외부 URL 변경 무시
@@ -56,40 +42,29 @@ class _MainAppState extends State<MainApp> {
       routes: [
         GoRoute(
           path: '/',
-          builder: (context, state) => _buildResponsiveLayout(
-            context,
-            _loggedIn
-                ? NavigationBarPage(
-                    onLogin: _onLogin,
-                    offLogin: _offLogin,
-                  )
-                : InitialPage(
-                    service: _kakaoService,
-                    onLogin: _onLogin,
-                    offLogin: _offLogin,
-                  ),
-          ),
+          builder:
+              (context, state) => _buildResponsiveLayout(
+                context,
+                _loggedIn
+                    ? NavigationBarPage(onLogin: _onLogin, offLogin: _offLogin)
+                    : InitialPage(onLogin: _onLogin, offLogin: _offLogin),
+              ),
         ),
         GoRoute(
           path: '/kakao-callback',
-          builder: (context, state) => _buildResponsiveLayout(
-            context,
-            InitialPage(
-              service: _kakaoService,
-              onLogin: _onLogin,
-              offLogin: _offLogin,
-            ),
-          ),
+          builder:
+              (context, state) => _buildResponsiveLayout(
+                context,
+                InitialPage(onLogin: _onLogin, offLogin: _offLogin),
+              ),
         ),
         GoRoute(
           path: '/home',
-          builder: (context, state) => _buildResponsiveLayout(
-            context,
-            NavigationBarPage(
-              onLogin: _onLogin,
-              offLogin: _offLogin,
-            ),
-          ),
+          builder:
+              (context, state) => _buildResponsiveLayout(
+                context,
+                NavigationBarPage(onLogin: _onLogin, offLogin: _offLogin),
+              ),
         ),
       ],
     );
@@ -105,6 +80,15 @@ class _MainAppState extends State<MainApp> {
         final screenHeight = constraints.maxHeight;
         final currentAspectRatio = screenWidth / screenHeight;
 
+        final targetWidth = (screenHeight - 20) * targetAspectRatio;
+        return Center(
+          child: SizedBox(
+            width: targetWidth > 375 ? 375 : targetWidth,
+            height: screenHeight - 20 > 812 ? 812 : screenHeight - 20,
+            child: child,
+          ),
+        );
+        /*
         if (currentAspectRatio > targetAspectRatio) {
           // 화면이 너무 넓을 때
           final targetWidth = screenHeight * targetAspectRatio;
@@ -125,7 +109,7 @@ class _MainAppState extends State<MainApp> {
               child: child,
             ),
           );
-        }
+        }*/
       },
     );
   }
@@ -136,15 +120,25 @@ class _MainAppState extends State<MainApp> {
       routerConfig: _router,
       title: '소담소담',
       theme: ThemeData(
-        primaryColor: const Color(0xFFD9D9D9),
+        //primaryColor: const Color(0xFFD9D9D9),
         scaffoldBackgroundColor: const Color(0xFFD9D9D9),
         fontFamily: 'Pretendard',
       ),
+      scrollBehavior: MaterialScrollBehavior().copyWith(
+        dragDevices: {
+          PointerDeviceKind.mouse,
+          PointerDeviceKind.touch,
+          PointerDeviceKind.stylus,
+          PointerDeviceKind.unknown,
+        },
+      ),
       builder: (context, child) {
-        return MediaQuery(
-          // 시스템 설정과 관계없이 앱 내에서 텍스트 크기를 고정
-          data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
-          child: child!,
+        return Scaffold(
+          body: MediaQuery(
+            // 시스템 설정과 관계없이 앱 내에서 텍스트 크기를 고정
+            data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+            child: child!,
+          ),
         );
       },
     );
