@@ -5,6 +5,7 @@
  */
 
 import 'package:flutter/material.dart';
+import 'package:sodamsodam_app/subscreens/place_card.dart';
 import 'package:sodamsodam_app/subscreens/place_review_card.dart';
 
 class LikePage extends StatefulWidget {
@@ -218,6 +219,14 @@ class LikePlacesPage extends StatefulWidget {
 class _LikePlacesPageState extends State<LikePlacesPage> {
   @override
   Widget build(BuildContext context) {
-    return Container();
+    return ListView(
+      children: List.generate(10, (context) {
+        return PlaceCard(
+          placeName: "피넛 스토어",
+          content: "분위기 쥑이는 이탈리안 맛집",
+          isLiked: true,
+        );
+      }),
+    );
   }
 }
